@@ -1,0 +1,82 @@
+﻿# ============================================================
+# PYTHON CACHE AND BUILD OUTPUTS
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# ============================================================
+# LOCAL ENVIRONMENTS
+# ============================================================
+.venv/
+venv/
+env/
+ENV/
+.conda/
+.ipynb_checkpoints/
+
+# ============================================================
+# LOCAL SECRETS AND CONFIGURATION
+# ============================================================
+.env
+.env.*
+!.env.example
+config/config.local.json
+config/*.local.json
+local_settings.py
+*.pem
+*.key
+*.pfx
+*.p12
+*credentials*.json
+*service-principal*.json
+azure-credentials.json
+
+# ============================================================
+# DATA FILES THAT SHOULD NOT BE COMMITTED BY DEFAULT
+# ============================================================
+data/raw/*
+data/private/*
+data/papers/*.pdf
+data/sample/rag_docs/*.pdf
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
+
+# ============================================================
+# KEEP DIRECTORY PLACEHOLDERS
+# ============================================================
+!data/**/.gitkeep
+
+# ============================================================
+# VECTOR INDEXES AND GENERATED ARTIFACTS
+# ============================================================
+data/faiss_index/*
+!data/faiss_index/.gitkeep
+artifacts/*
+!artifacts/.gitkeep
+
+# ============================================================
+# AZURE AND TOOLING LOCAL STATE
+# ============================================================
+.azure/
+.mlflow/
+outputs/
+logs/
+latest_run_id.txt
+
+# ============================================================
+# OPERATING SYSTEM FILES
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini

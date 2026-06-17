@@ -1,0 +1,17 @@
+﻿{
+  "azure_openai": {
+    "endpoint": "https://YOUR-AZURE-OPENAI-RESOURCE.openai.azure.com/",
+    "api_key": "REPLACE_WITH_LOCAL_ONLY_VALUE",
+    "api_version": "2024-10-21",
+    "chat_deployment": "gpt-4o-mini-dsa",
+    "embedding_deployment": "text-embedding-3-small-dsa"
+  },
+  "rag": {
+    "chunk_size": 1000,
+    "chunk_overlap": 200,
+    "retrieval_k": 4
+  },
+  "ml": {
+    "random_seed": 42
+  }
+}

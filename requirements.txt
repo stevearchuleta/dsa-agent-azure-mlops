@@ -1,0 +1,19 @@
+# Runtime
+openai>=1.40
+langchain>=0.3
+langchain-openai>=0.3
+langchain-community>=0.3
+langchain-experimental>=0.3
+pypdf>=4.0
+faiss-cpu>=1.7
+tiktoken>=0.7
+python-dotenv>=1.0
+pandas>=2.1
+matplotlib>=3.8
+seaborn>=0.13
+
+# Dev
+ruff>=0.4
+pytest>=8.0
+pytest-cov>=5.0
+ipykernel>=6.29

@@ -1,0 +1,90 @@
+﻿# ============================================================
+# GIT AND GITHUB METADATA
+# ============================================================
+.git
+.github
+
+# ============================================================
+# LOCAL SECRETS AND CONFIGURATION
+# ============================================================
+.env
+.env.*
+!.env.example
+config/config.local.json
+config/*.local.json
+config.local.json
+local_settings.py
+*.pem
+*.key
+*.pfx
+*.p12
+*credentials*.json
+*service-principal*.json
+azure-credentials.json
+
+# ============================================================
+# PYTHON CACHE AND BUILD OUTPUTS
+# ============================================================
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# ============================================================
+# LOCAL ENVIRONMENTS
+# ============================================================
+.venv/
+venv/
+env/
+ENV/
+.conda/
+.ipynb_checkpoints/
+
+# ============================================================
+# DATA FILES THAT SHOULD NOT ENTER DOCKER BUILD CONTEXT
+# ============================================================
+data/raw/
+data/private/
+data/papers/*.pdf
+data/sample/rag_docs/*.pdf
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
+
+# ============================================================
+# VECTOR INDEXES AND GENERATED ARTIFACTS
+# ============================================================
+data/faiss_index/*
+!data/faiss_index/.gitkeep
+artifacts/*
+!artifacts/.gitkeep
+
+# ============================================================
+# AZURE AND TOOLING LOCAL STATE
+# ============================================================
+.azure/
+.mlflow/
+outputs/
+logs/
+latest_run_id.txt
+
+# ============================================================
+# NOTEBOOKS AND TESTS ARE NOT NEEDED IN THE RUNTIME IMAGE
+# ============================================================
+notebooks/
+tests/
+
+# ============================================================
+# OPERATING SYSTEM FILES
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini

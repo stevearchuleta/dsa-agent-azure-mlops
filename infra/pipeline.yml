@@ -1,0 +1,30 @@
+# Azure ML Pipeline Definition
+# Runs the DSA Agent as a containerized job
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+
+experiment_name: dsa-agent-pipeline
+display_name: dsa-agent-run
+
+compute: azureml:serverless
+
+environment:
+  image: ghcr.io/stevearchuleta/dsa-agent:latest
+
+command: >-
+  python -c "
+  from dsa.config import PROJECT_ROOT;
+  from dsa.rag.ingest import load_pdfs;
+  print(f'Project root: {PROJECT_ROOT}');
+  docs = load_pdfs();
+  print(f'Loaded {len(docs)} pages');
+  "
+
+resources:
+  instance_type: Standard_DS1_v2
+  instance_count: 1
+
+limits:
+  timeout: 600
+
+environment_variables:
+  OPENAI_API_KEY: "${{secrets.OPENAI_API_KEY}}"
