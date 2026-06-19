@@ -12,7 +12,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.use("Agg", force=True)
+
+import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 import pandas as pd
 
