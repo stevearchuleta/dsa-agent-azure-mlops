@@ -1,36 +1,43 @@
 """
-Embedding factory.
+Azure OpenAI embeddings factory.
 
-Returns a configured OpenAI embeddings instance for use
-with FAISS vector stores and document retrieval.
+Builds AzureOpenAIEmbeddings instances for FAISS vector stores and document
+retrieval. Application code uses Azure deployment names, not raw model names.
 """
 
 from __future__ import annotations
 
 import logging
 
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings
 
-from dsa.config import EMBEDDING_MODEL, ensure_api_key
+from dsa.config import get_azure_openai_config
 
 logger = logging.getLogger(__name__)
 
 
-def get_embeddings(model: str | None = None) -> OpenAIEmbeddings:
-    """Return an OpenAIEmbeddings instance.
+def get_embeddings(
+    deployment: str | None = None,
+    *,
+    model: str | None = None,
+) -> AzureOpenAIEmbeddings:
+    """Return an AzureOpenAIEmbeddings instance.
 
     Parameters
     ----------
+    deployment : str, optional
+        Azure OpenAI embedding deployment name. This is preferred.
     model : str, optional
-        Override the embedding model name (default: config.EMBEDDING_MODEL).
-
-    Returns
-    -------
-    OpenAIEmbeddings
-        Ready-to-use embedding model.
+        Backward-compatible alias for deployment.
     """
-    ensure_api_key()
+    settings = get_azure_openai_config(require_credentials=True)
+    selected_deployment = deployment or model or settings.embedding_deployment
 
-    _model = model or EMBEDDING_MODEL
-    logger.info("Embedding model: %s", _model)
-    return OpenAIEmbeddings(model=_model)
+    logger.info("Azure OpenAI embedding deployment: %s", selected_deployment)
+
+    return AzureOpenAIEmbeddings(
+        azure_endpoint=settings.endpoint,
+        api_key=settings.api_key,
+        api_version=settings.api_version,
+        azure_deployment=selected_deployment,
+    )
