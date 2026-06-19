@@ -1,54 +1,81 @@
 """
-LLM builder with automatic fallback.
+Azure OpenAI LLM factory.
 
-Tries the primary model first; falls back to a cheaper model
-if the primary is unavailable or raises an error.
+Builds AzureChatOpenAI instances from config/config.local.json or environment
+variables. Application code uses Azure deployment names, not raw model names.
 """
 
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 
-from dsa.config import LLM_MODEL, LLM_FALLBACK, LLM_TEMPERATURE, ensure_api_key
+from dsa.config import LLM_TEMPERATURE, get_azure_openai_config
 
 logger = logging.getLogger(__name__)
 
 
 def get_llm(
-    model: str | None = None,
+    deployment: str | None = None,
     temperature: float | None = None,
     *,
     fallback: bool = True,
-) -> ChatOpenAI:
-    """Return a ChatOpenAI instance, optionally with a fallback model.
+    model: str | None = None,
+) -> Any:
+    """Return an AzureChatOpenAI instance.
 
     Parameters
     ----------
-    model : str, optional
-        Override the primary model name (default: config.LLM_MODEL).
+    deployment : str, optional
+        Azure OpenAI deployment name. This is preferred.
     temperature : float, optional
-        Override the temperature (default: config.LLM_TEMPERATURE).
+        Sampling temperature.
     fallback : bool
-        If True, attach a fallback model via .with_fallbacks().
-
-    Returns
-    -------
-    ChatOpenAI
-        Ready-to-use LLM (with or without fallback).
+        Attach a fallback deployment when one is configured.
+    model : str, optional
+        Backward-compatible alias for deployment.
     """
-    ensure_api_key()
+    settings = get_azure_openai_config(require_credentials=True)
 
-    _model = model or LLM_MODEL
-    _temp = temperature if temperature is not None else LLM_TEMPERATURE
+    selected_deployment = deployment or model or settings.chat_deployment
+    selected_temperature = temperature if temperature is not None else LLM_TEMPERATURE
 
-    primary = ChatOpenAI(model=_model, temperature=_temp)
-    logger.info("Primary LLM: %s (temperature=%.1f)", _model, _temp)
+    primary = AzureChatOpenAI(
+        azure_endpoint=settings.endpoint,
+        api_key=settings.api_key,
+        api_version=settings.api_version,
+        azure_deployment=selected_deployment,
+        temperature=selected_temperature,
+    )
 
-    if fallback and _model != LLM_FALLBACK:
-        backup = ChatOpenAI(model=LLM_FALLBACK, temperature=_temp)
-        logger.info("Fallback LLM: %s", LLM_FALLBACK)
+    logger.info(
+        "Primary Azure OpenAI chat deployment: %s (temperature=%.1f)",
+        selected_deployment,
+        selected_temperature,
+    )
+
+    if (
+        fallback
+        and deployment is None
+        and model is None
+        and settings.chat_fallback_deployment
+        and settings.chat_fallback_deployment != selected_deployment
+    ):
+        backup = AzureChatOpenAI(
+            azure_endpoint=settings.endpoint,
+            api_key=settings.api_key,
+            api_version=settings.api_version,
+            azure_deployment=settings.chat_fallback_deployment,
+            temperature=selected_temperature,
+        )
+
+        logger.info(
+            "Fallback Azure OpenAI chat deployment: %s",
+            settings.chat_fallback_deployment,
+        )
+
         return primary.with_fallbacks([backup])
 
     return primary
