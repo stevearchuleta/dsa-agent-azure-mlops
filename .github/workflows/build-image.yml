@@ -1,0 +1,82 @@
+name: Build Image to ACR
+
+on:
+  workflow_dispatch:
+    inputs:
+      push_image:
+        description: "Push image to Azure Container Registry"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-image:
+    name: Build Docker image and optionally push to ACR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Show Azure account
+        shell: bash
+        run: |
+          az account show --query "{subscription:name, subscriptionId:id, tenantId:tenantId, user:user.name}" --output table
+
+      - name: Show Docker and ACR context
+        shell: bash
+        run: |
+          docker --version
+          echo "acr_name=${{ vars.AZURE_ACR_NAME }}"
+          echo "acr_login_server=${{ vars.AZURE_ACR_LOGIN_SERVER }}"
+          echo "push_image=${{ inputs.push_image }}"
+
+      - name: Log in to Azure Container Registry
+        shell: bash
+        run: |
+          az acr login --name "${{ vars.AZURE_ACR_NAME }}"
+
+      - name: Build Docker image
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE_REPOSITORY="dsa-agent"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE_TAG="sha-${SHORT_SHA}"
+          FULL_IMAGE="${{ vars.AZURE_ACR_LOGIN_SERVER }}/${IMAGE_REPOSITORY}:${IMAGE_TAG}"
+          LATEST_IMAGE="${{ vars.AZURE_ACR_LOGIN_SERVER }}/${IMAGE_REPOSITORY}:latest"
+          echo "FULL_IMAGE=$FULL_IMAGE" >> "$GITHUB_ENV"
+          echo "LATEST_IMAGE=$LATEST_IMAGE" >> "$GITHUB_ENV"
+          echo "Building $FULL_IMAGE"
+          docker build --pull --tag "$FULL_IMAGE" --tag "$LATEST_IMAGE" .
+          docker image inspect "$FULL_IMAGE"
+
+      - name: Push Docker image to ACR
+        if: ${{ inputs.push_image }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker push "$FULL_IMAGE"
+          docker push "$LATEST_IMAGE"
+
+      - name: Show recent ACR tags
+        if: ${{ inputs.push_image }}
+        shell: bash
+        run: |
+          az acr repository show-tags \
+            --name "${{ vars.AZURE_ACR_NAME }}" \
+            --repository dsa-agent \
+            --orderby time_desc \
+            --top 10 \
+            --output table
