@@ -1,0 +1,83 @@
+name: Azure ML Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      submit_pipeline:
+        description: "Submit the Azure ML pipeline after validation"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  azure-ml-pipeline:
+    name: Azure ML pipeline validation and optional submission
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Azure ML CLI extension
+        shell: bash
+        run: |
+          az extension add --name ml --upgrade
+          az extension show --name ml --query "{name:name, version:version}" --output table
+
+      - name: Show Azure account
+        shell: bash
+        run: |
+          az account show --query "{subscription:name, subscriptionId:id, tenantId:tenantId, user:user.name}" --output table
+
+      - name: Validate Azure ML pipeline YAML
+        shell: bash
+        run: |
+          az ml job validate \
+            --file mlops/azureml/pipelines/agent_eval_pipeline.yml \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --workspace-name "${{ vars.AZURE_ML_WORKSPACE }}"
+
+      - name: Submit Azure ML pipeline
+        if: ${{ inputs.submit_pipeline }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          JOB_NAME=$(az ml job create \
+            --file mlops/azureml/pipelines/agent_eval_pipeline.yml \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --workspace-name "${{ vars.AZURE_ML_WORKSPACE }}" \
+            --query name \
+            --output tsv)
+          echo "AZURE_ML_JOB_NAME=$JOB_NAME" >> "$GITHUB_ENV"
+          echo "Submitted Azure ML job: $JOB_NAME"
+
+      - name: Stream Azure ML pipeline
+        if: ${{ inputs.submit_pipeline }}
+        shell: bash
+        run: |
+          az ml job stream \
+            --name "$AZURE_ML_JOB_NAME" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --workspace-name "${{ vars.AZURE_ML_WORKSPACE }}"
+
+      - name: Show final Azure ML job status
+        if: ${{ inputs.submit_pipeline }}
+        shell: bash
+        run: |
+          az ml job show \
+            --name "$AZURE_ML_JOB_NAME" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --workspace-name "${{ vars.AZURE_ML_WORKSPACE }}" \
+            --query "{name:name, status:status, experimentName:experiment_name}" \
+            --output table
