@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: dsa_agent_evaluation_pipeline
+experiment_name: dsa-agent-evaluation
+description: Deterministic evaluation pipeline for the DSA Agent Azure MLOps project.
+settings:
+  default_compute: azureml:serverless
+outputs:
+  evaluation_report:
+    type: uri_folder
+jobs:
+  prepare_sample_data:
+    type: command
+    component: ../components/prepare_sample_data.yml
+  evaluate_agent_tools:
+    type: command
+    component: ../components/evaluate_agent_tools.yml
+    inputs:
+      sample_data: ${{parent.jobs.prepare_sample_data.outputs.sample_data}}
+    outputs:
+      evaluation_report: ${{parent.outputs.evaluation_report}}
