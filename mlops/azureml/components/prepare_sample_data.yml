@@ -1,0 +1,18 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: dsa_prepare_sample_data
+display_name: DSA Prepare Sample Data
+version: 1
+type: command
+is_deterministic: true
+code: ../../..
+command: >-
+  python -m pip install --upgrade pip &&
+  python -m pip install -e ".[dev]" &&
+  python mlops/azureml/scripts/prepare_sample_data.py
+  --output_data ${{outputs.sample_data}}
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04
+  conda_file: ../environments/dsa-agent-pipeline-conda.yml
+outputs:
+  sample_data:
+    type: uri_folder

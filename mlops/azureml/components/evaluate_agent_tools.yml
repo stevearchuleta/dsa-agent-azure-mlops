@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: dsa_evaluate_agent_tools
+display_name: DSA Evaluate Agent Tools
+version: 1
+type: command
+is_deterministic: true
+code: ../../..
+command: >-
+  python -m pip install --upgrade pip &&
+  python -m pip install -e ".[dev]" &&
+  python mlops/azureml/scripts/evaluate_agent_tools.py
+  --input_data ${{inputs.sample_data}}
+  --output_report ${{outputs.evaluation_report}}
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04
+  conda_file: ../environments/dsa-agent-pipeline-conda.yml
+inputs:
+  sample_data:
+    type: uri_folder
+outputs:
+  evaluation_report:
+    type: uri_folder
