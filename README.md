@@ -103,3 +103,21 @@ That file is ignored by Git. The repository includes safe examples only.
 ## Project status
 
 The MLOps foundation is complete. The next phase is an interactive router or CLI demo that chooses among the deterministic data science tools.
+
+## Interactive router CLI
+
+Session 8 adds a deterministic router that classifies every question first,
+then dispatches only when the selected tool has the required inputs.
+
+```powershell
+python -m dsa.cli "show missing values and dataframe overview"
+python -m dsa.cli "plot a histogram by target"
+python -m dsa.cli --json "SQL: select * from employees" --db .\sample.sqlite
+python -m dsa.cli --list-routes
+```
+
+After editable installation, the console script is also available:
+
+```powershell
+dsa-agent "train a random forest classifier"
+```

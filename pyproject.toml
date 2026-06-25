@@ -41,6 +41,9 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[project.scripts]
+dsa-agent = "dsa.cli:main"
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
